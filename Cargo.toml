@@ -1,0 +1,27 @@
+[package]
+name = "agentsql"
+version = "0.1.0"
+edition = "2024"
+authors = ["CryptoPatrick <cryptopatrick@gmail.com>"]
+
+###############################################################################
+description = ""Persistence for Agents""
+documentation = "https://docs.rs/agentsql"
+homepage = "https://github.com/cryptopatrick/agentsql"
+repository = "https://github.com/cryptopatrick/agentsql"
+readme = "README.md"
+keywords = ["<KEYWORD1>", "<KEYWORD2>" ]
+license = "MIT"
+autotests = false
+
+###############################################################################
+[lib]
+name = "agentsql"
+path = "src/lib.rs"
+
+[[test]]
+name = "tests"
+path = "tests/test.rs"
+
+###############################################################################
+[dependencies]
