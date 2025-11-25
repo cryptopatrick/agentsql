@@ -1,16 +1,16 @@
 [package]
 name = "agentsql"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["CryptoPatrick <cryptopatrick@gmail.com>"]
 
 ###############################################################################
-description = ""Persistence for Agents""
+description = "Interface for agent sql persistence"
 documentation = "https://docs.rs/agentsql"
 homepage = "https://github.com/cryptopatrick/agentsql"
 repository = "https://github.com/cryptopatrick/agentsql"
 readme = "README.md"
-keywords = ["<KEYWORD1>", "<KEYWORD2>" ]
+keywords = ["AI", "Agent", "Persistence"]
 license = "MIT"
 autotests = false
 
