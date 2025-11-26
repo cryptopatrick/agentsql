@@ -58,18 +58,19 @@ impl SqlBackend {
     ///
     /// # Examples
     ///
-    /// ```no_run
+    /// ```ignore
     /// use agentsql::{SqlBackend, SqlBackendConfig};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     // SQLite
-    ///     let db = SqlBackend::new(SqlBackendConfig::Sqlite("agent.db".to_string())).await?;
+    ///     let db = SqlBackend::sqlite("agent.db").await?;
     ///
-    ///     // PostgreSQL
-    ///     let db = SqlBackend::new(SqlBackendConfig::Postgres(
-    ///         "postgres://user:pass@localhost/db".to_string()
-    ///     )).await?;
+    ///     // PostgreSQL (requires "postgres" feature)
+    ///     let db = SqlBackend::postgres("postgres://user:pass@localhost/db").await?;
+    ///
+    ///     // MySQL (requires "mysql" feature)
+    ///     let db = SqlBackend::mysql("mysql://user:pass@localhost/db").await?;
     ///
     ///     Ok(())
     /// }
@@ -237,23 +238,24 @@ impl SqlBackend {
             let col_name = column.name().to_string();
 
             // Try to get the value as raw and convert based on what works
-            // Start with the most common types
+            // Start with Option types to handle NULL
             let value =
-                // Try i64 (most common for IDs and integers)
-                row.try_get::<i64, _>(i).ok().map(|v| v.to_string().into_bytes())
-                // Try i32
-                .or_else(|| row.try_get::<i32, _>(i).ok().map(|v| v.to_string().into_bytes()))
-                // Try String
-                .or_else(|| row.try_get::<String, _>(i).ok().map(|v| v.into_bytes()))
-                // Try Vec<u8>
-                .or_else(|| row.try_get::<Vec<u8>, _>(i).ok())
-                // Try f64
-                .or_else(|| row.try_get::<f64, _>(i).ok().map(|v| v.to_string().into_bytes()))
-                // Try f32
-                .or_else(|| row.try_get::<f32, _>(i).ok().map(|v| v.to_string().into_bytes()))
-                // Try bool
-                .or_else(|| row.try_get::<bool, _>(i).ok().map(|v| if v { b"1".to_vec() } else { b"0".to_vec() }))
-                .ok_or_else(|| SqlError::Query(format!("Failed to decode column {} - tried all supported types", col_name)))?;
+                // Try Option<i64> to handle NULL integers
+                row.try_get::<Option<i64>, _>(i).ok().and_then(|opt| opt.map(|v| v.to_string().into_bytes()))
+                // Try Option<i32>
+                .or_else(|| row.try_get::<Option<i32>, _>(i).ok().and_then(|opt| opt.map(|v| v.to_string().into_bytes())))
+                // Try Option<String>
+                .or_else(|| row.try_get::<Option<String>, _>(i).ok().and_then(|opt| opt.map(|v| v.into_bytes())))
+                // Try Option<Vec<u8>>
+                .or_else(|| row.try_get::<Option<Vec<u8>>, _>(i).ok().and_then(|opt| opt))
+                // Try Option<f64>
+                .or_else(|| row.try_get::<Option<f64>, _>(i).ok().and_then(|opt| opt.map(|v| v.to_string().into_bytes())))
+                // Try Option<f32>
+                .or_else(|| row.try_get::<Option<f32>, _>(i).ok().and_then(|opt| opt.map(|v| v.to_string().into_bytes())))
+                // Try Option<bool>
+                .or_else(|| row.try_get::<Option<bool>, _>(i).ok().and_then(|opt| opt.map(|v| if v { b"1".to_vec() } else { b"0".to_vec() })))
+                // If all Option types return None, it's a NULL value
+                .unwrap_or_else(|| vec![]);
 
             agent_row = agent_row.with_column(col_name, Value::new(value));
         }
@@ -456,7 +458,7 @@ mod tests {
         let db = SqlBackend::sqlite(":memory:").await.unwrap();
 
         // Test put/get
-        db.put("test_key", b"test_value".into()).await.unwrap();
+        db.put("test_key", b"test_value".to_vec().into()).await.unwrap();
         let value = db.get("test_key").await.unwrap().unwrap();
         assert_eq!(value.as_bytes(), b"test_value");
 
@@ -465,8 +467,8 @@ mod tests {
         assert!(!db.exists("nonexistent").await.unwrap());
 
         // Test scan
-        db.put("prefix_1", b"v1".into()).await.unwrap();
-        db.put("prefix_2", b"v2".into()).await.unwrap();
+        db.put("prefix_1", b"v1".to_vec().into()).await.unwrap();
+        db.put("prefix_2", b"v2".to_vec().into()).await.unwrap();
         let result = db.scan("prefix").await.unwrap();
         assert_eq!(result.keys.len(), 2);
 

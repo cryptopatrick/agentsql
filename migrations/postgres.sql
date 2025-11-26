@@ -59,9 +59,10 @@ CREATE TABLE IF NOT EXISTS tool_calls (
     parameters TEXT,
     result TEXT,
     error TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
     started_at BIGINT NOT NULL,
-    completed_at BIGINT NOT NULL,
-    duration_ms BIGINT NOT NULL
+    completed_at BIGINT,
+    duration_ms BIGINT
 );
 
 CREATE INDEX IF NOT EXISTS idx_tool_calls_name ON tool_calls(name);

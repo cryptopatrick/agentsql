@@ -56,9 +56,10 @@ CREATE TABLE IF NOT EXISTS tool_calls (
     parameters TEXT,
     result TEXT,
     error TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
     started_at BIGINT NOT NULL,
-    completed_at BIGINT NOT NULL,
-    duration_ms BIGINT NOT NULL,
+    completed_at BIGINT,
+    duration_ms BIGINT,
     INDEX idx_tool_calls_name (name),
     INDEX idx_tool_calls_started_at (started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
