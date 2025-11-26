@@ -25,7 +25,7 @@ path = "tests/test.rs"
 
 ###############################################################################
 [dependencies]
-agentdb = { path = "../agentdb" }
+agentdb = "0.2.0"
 async-trait = "0.1"
 thiserror = "1.0"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync"] }
